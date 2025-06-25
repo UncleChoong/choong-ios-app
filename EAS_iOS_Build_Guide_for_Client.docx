@@ -1,0 +1,56 @@
+EAS iOS Build Guide for Client
+
+Step-by-Step Guide: Building Your iOS App with Expo EAS
+
+1. Install Node.js
+- Go to: https://nodejs.org/
+- Click the big green "LTS" button to download.
+- Open the downloaded file and follow the instructions to install.
+
+2. Install Expo and EAS Tools
+- Open the Command Prompt (search for "cmd" in the Start menu).
+- Copy and paste this command, then press Enter:
+  npm install -g expo-cli eas-cli
+- Wait for it to finish (it may take a few minutes).
+
+3. Get the Project Files
+- Download the project folder (your developer will send you a ZIP file or a link).
+- Unzip the folder to your Desktop or another easy-to-find location.
+
+4. Open the Project Folder in Command Prompt
+- In Command Prompt, type cd  (with a space after it).
+- Drag and drop the unzipped project folder into the Command Prompt window.
+- Press Enter. (This changes the directory to your project folder.)
+
+5. Install Project Dependencies
+- In the same Command Prompt window, type:
+  npm install
+- Press Enter and wait for it to finish (this may take a few minutes).
+
+6. Log in to Expo
+- In Command Prompt, type:
+  eas login
+- Press Enter.
+- When prompted, enter your Expo account email and password.
+  - If you don't have an Expo account, go to https://expo.dev/signup and create one.
+
+7. Start the iOS Build
+- In Command Prompt, type:
+  eas build --profile production --platform ios
+- Press Enter.
+- When asked, log in with your Apple Developer account (this is required by Apple for security).
+
+8. Wait for the Build to Finish
+- The process will take a few minutes.
+- When it's done, you'll get a link to download your iOS app file.
+
+9. Download and Test Your App
+- Click the link provided in the Command Prompt to download your app.
+- You can now test it or upload it to the App Store.
+
+TROUBLESHOOTING & SUPPORT
+- If you get stuck, copy any error messages and send them to your developer for help.
+- Don't close the Command Prompt window until the process is finished.
+- For more help, visit https://docs.expo.dev/build/introduction/ or contact your developer.
+
+Good luck! You can do it! 
