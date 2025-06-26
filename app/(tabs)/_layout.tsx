@@ -18,7 +18,8 @@ export default function TabLayout() {
           text: 'Yes, Go Back',
           style: 'destructive',
           onPress: () => {
-            // Use replace to go back to the auth screen
+            // Navigate back to the login screen
+            router.dismissAll();
             router.replace('/');
           },
         },
