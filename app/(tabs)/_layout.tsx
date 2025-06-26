@@ -19,8 +19,7 @@ export default function TabLayout() {
           style: 'destructive',
           onPress: () => {
             // Navigate back to the login screen
-            router.dismissAll();
-            router.replace('/');
+            router.push('/');
           },
         },
       ]
