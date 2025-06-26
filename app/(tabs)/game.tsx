@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ interface GameState {
   snake: Position[];
   food: Position;
   direction: Position;
+  nextDirection: Position;
   isPlaying: boolean;
   score: number;
   highScore: number;
@@ -48,11 +49,14 @@ export default function MiniGame() {
     snake: INITIAL_SNAKE,
     food: { x: 5, y: 5 },
     direction: DIRECTIONS.UP,
+    nextDirection: DIRECTIONS.UP,
     isPlaying: false,
     score: 0,
     highScore: 0,
     gameOver: false,
   });
+
+  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
 
   const generateFood = useCallback((snake: Position[]): Position => {
     let newFood: Position;
@@ -66,11 +70,13 @@ export default function MiniGame() {
   }, []);
 
   const resetGame = useCallback(() => {
+    const newFood = generateFood(INITIAL_SNAKE);
     setGameState(prev => ({
       ...prev,
-      snake: INITIAL_SNAKE,
-      food: generateFood(INITIAL_SNAKE),
+      snake: [...INITIAL_SNAKE],
+      food: newFood,
       direction: DIRECTIONS.UP,
+      nextDirection: DIRECTIONS.UP,
       isPlaying: false,
       score: 0,
       gameOver: false,
@@ -81,11 +87,13 @@ export default function MiniGame() {
     setGameState(prev => {
       if (!prev.isPlaying || prev.gameOver) return prev;
 
+      // Use nextDirection for the actual movement
+      const currentDirection = prev.nextDirection;
       const newSnake = [...prev.snake];
       const head = { ...newSnake[0] };
       
-      head.x += prev.direction.x;
-      head.y += prev.direction.y;
+      head.x += currentDirection.x;
+      head.y += currentDirection.y;
 
       // Check wall collision
       if (head.x < 0 || head.x >= BOARD_SIZE || head.y < 0 || head.y >= BOARD_SIZE) {
@@ -111,39 +119,65 @@ export default function MiniGame() {
 
       // Check food collision
       if (head.x === prev.food.x && head.y === prev.food.y) {
+        const newFood = generateFood(newSnake);
         return {
           ...prev,
           snake: newSnake,
-          food: generateFood(newSnake),
+          food: newFood,
           score: prev.score + 10,
+          direction: currentDirection,
         };
       } else {
         newSnake.pop();
         return {
           ...prev,
           snake: newSnake,
+          direction: currentDirection,
         };
       }
     });
   }, [generateFood]);
 
+  // Game loop effect
   useEffect(() => {
     if (gameState.isPlaying && !gameState.gameOver) {
-      const gameLoop = setInterval(moveSnake, 150);
-      return () => clearInterval(gameLoop);
+      gameLoopRef.current = setInterval(moveSnake, 200);
+      return () => {
+        if (gameLoopRef.current) {
+          clearInterval(gameLoopRef.current);
+        }
+      };
+    } else {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
+      }
     }
   }, [gameState.isPlaying, gameState.gameOver, moveSnake]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
+    };
+  }, []);
 
   const handleDirectionChange = (newDirection: Position) => {
     setGameState(prev => {
       // Prevent reversing into itself
+      const currentDirection = prev.direction;
       if (
-        (newDirection.x === -prev.direction.x && newDirection.y === -prev.direction.y) ||
-        !prev.isPlaying
+        (newDirection.x === -currentDirection.x && newDirection.y === -currentDirection.y) ||
+        !prev.isPlaying ||
+        prev.gameOver
       ) {
         return prev;
       }
-      return { ...prev, direction: newDirection };
+      
+      // Set the next direction to be applied on the next game loop
+      return { ...prev, nextDirection: newDirection };
     });
   };
 
@@ -254,33 +288,61 @@ export default function MiniGame() {
           <View style={styles.directionControls}>
             <View style={styles.directionRow}>
               <TouchableOpacity
-                style={styles.directionButton}
+                style={[
+                  styles.directionButton,
+                  gameState.nextDirection === DIRECTIONS.UP && styles.directionButtonActive
+                ]}
                 onPress={() => handleDirectionChange(DIRECTIONS.UP)}
+                disabled={!gameState.isPlaying}
               >
-                <ArrowUp color="#059669" size={24} />
+                <ArrowUp 
+                  color={gameState.nextDirection === DIRECTIONS.UP ? "#FFFFFF" : "#059669"} 
+                  size={24} 
+                />
               </TouchableOpacity>
             </View>
             <View style={styles.directionRow}>
               <TouchableOpacity
-                style={styles.directionButton}
+                style={[
+                  styles.directionButton,
+                  gameState.nextDirection === DIRECTIONS.LEFT && styles.directionButtonActive
+                ]}
                 onPress={() => handleDirectionChange(DIRECTIONS.LEFT)}
+                disabled={!gameState.isPlaying}
               >
-                <ArrowLeft color="#059669" size={24} />
+                <ArrowLeft 
+                  color={gameState.nextDirection === DIRECTIONS.LEFT ? "#FFFFFF" : "#059669"} 
+                  size={24} 
+                />
               </TouchableOpacity>
               <View style={styles.directionSpacer} />
               <TouchableOpacity
-                style={styles.directionButton}
+                style={[
+                  styles.directionButton,
+                  gameState.nextDirection === DIRECTIONS.RIGHT && styles.directionButtonActive
+                ]}
                 onPress={() => handleDirectionChange(DIRECTIONS.RIGHT)}
+                disabled={!gameState.isPlaying}
               >
-                <ArrowRight color="#059669" size={24} />
+                <ArrowRight 
+                  color={gameState.nextDirection === DIRECTIONS.RIGHT ? "#FFFFFF" : "#059669"} 
+                  size={24} 
+                />
               </TouchableOpacity>
             </View>
             <View style={styles.directionRow}>
               <TouchableOpacity
-                style={styles.directionButton}
+                style={[
+                  styles.directionButton,
+                  gameState.nextDirection === DIRECTIONS.DOWN && styles.directionButtonActive
+                ]}
                 onPress={() => handleDirectionChange(DIRECTIONS.DOWN)}
+                disabled={!gameState.isPlaying}
               >
-                <ArrowDown color="#059669" size={24} />
+                <ArrowDown 
+                  color={gameState.nextDirection === DIRECTIONS.DOWN ? "#FFFFFF" : "#059669"} 
+                  size={24} 
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -288,6 +350,9 @@ export default function MiniGame() {
 
         <View style={styles.instructions}>
           <Text style={styles.instructionsTitle}>How to Play</Text>
+          <Text style={styles.instructionsText}>
+            • Press Play to start the game
+          </Text>
           <Text style={styles.instructionsText}>
             • Use the arrow buttons to control the snake
           </Text>
@@ -484,6 +549,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  directionButtonActive: {
+    backgroundColor: '#059669',
+    borderColor: '#047857',
   },
   directionSpacer: {
     width: 56,
